@@ -398,7 +398,10 @@ details.sec[open]>summary .chev{transform:rotate(180deg)}
     </div>
     <div class="fact">
       <span class="hint">Reference service data is read-only. To change it, edit that service from the Service Catalogue.</span>
-      <button class="btn btn-p" onclick="saveAirpay()"><i class="ti ti-check"></i>Save Airpay service</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn" onclick="saveAirpayDraft()"><i class="ti ti-file-pencil"></i>Save as draft</button>
+        <button class="btn btn-p" onclick="saveAirpay()"><i class="ti ti-check"></i>Save Airpay service</button>
+      </div>
     </div>
   </div>
 
@@ -1067,6 +1070,15 @@ function apPreview(){
  sv('ap_partner',s.partner);
  apRs.set(s.airpay==='Yes'?s.rs:[{party:'Telco',type:'Percentage',value:'50'},{party:'Airpay partner',type:'Percentage',value:'50'}]);
  apTax.set(s.tax.length?s.tax:[{party:'PPN',type:'Percentage',value:'11'}]);
+}
+function saveAirpayDraft(){
+ if(!['Business User','PMO','Business Ops'].includes(role)){toast('Role '+role+' cannot save services');return;}
+ const base=get(+gv('ap_svc'));
+ const d=mk({date:today,status:'Draft',airpay:'Yes'});
+ if(base)Object.assign(d,JSON.parse(JSON.stringify(base)));
+ Object.assign(d,{id:Math.max(...services.map(x=>x.id))+1,no:'',status:'Draft',date:today,airpay:'Yes',partner:gv('ap_partner'),reason:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},
+  rs:apRs.rows.filter(r=>r.party||r.value).map(r=>({...r})),tax:apTax.rows.filter(r=>r.party||r.value).map(r=>({...r})),hist:[[today,`Draft saved by ${role}`]]});
+ services.unshift(d);toast('Draft saved — you can continue it later from the Service Catalogue');listStatus='All';show('list');openDetail(d.id);
 }
 function saveAirpay(){
  if(!['Business User','PMO','Business Ops'].includes(role)){toast('Role '+role+' cannot save services');return;}
