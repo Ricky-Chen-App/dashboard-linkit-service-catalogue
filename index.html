@@ -87,7 +87,9 @@ kbd{font-family:inherit;font-size:10.5px;border:1px solid var(--line);border-rad
 .lnk:hover{background:var(--brand50)}
 
 /* stats */
-.stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:18px 0}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px 11px;min-width:118px}
 .stat b{display:block;font-size:20px;font-weight:700;line-height:1.2}
 .stat span{font-size:11.5px;color:var(--ink3)}
