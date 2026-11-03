@@ -762,7 +762,7 @@ function renderList(){
  const rows=base.filter(s=>listStatus==='All'||s.status===listStatus);
  $('#listBody').innerHTML=rows.length?rows.map(s=>{const x=st(s,'pre');const r=readiness(s);
   return`<tr class="click" onclick="openDetail(${s.id})">
-  <td><div class="pn">${esc(s.service)}</div><div class="ps">${esc(s.no||'No number yet')} · ${s.country||s.telco?esc(s.country)+' — '+esc(s.telco):'details not filled in yet'}</div></td>
+  <td><div class="pn">${esc(s.service||'Untitled draft')}</div><div class="ps">${esc(s.no||'No number yet')} · ${s.country||s.telco?esc(s.country)+' — '+esc(s.telco):'details not filled in yet'}</div></td>
   <td><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">${esc(s.opNaming)}</span></td>
   <td><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span></td>
   <td class="r mono">${money(s)}${s.prices&&s.prices.length>1?`<div class="ps">+${s.prices.length-1} more price point${s.prices.length>2?"s":""}</div>`:""}</td>
@@ -790,7 +790,7 @@ function openDetail(id){
  if(role==='Business Ops'&&s.status==='Not Active')acts.push(`<button class="btn" onclick="reactivate(${id})"><i class="ti ti-player-play"></i>Reactivate</button>`);
  if(['Business Ops','Finance'].includes(role)&&s.campaign&&s.recon!=='Matched')acts.push(`<button class="btn btn-ok" onclick="reconModal(${id})"><i class="ti ti-scale"></i>Confirm reconciliation</button>`);
  $('#drawer').innerHTML=`
- <div class="dhd"><div style="flex:1"><div class="ps">${esc(s.no||'No number yet')} · ${esc(s.cp)}</div><h3>${esc(s.service)}</h3><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="bdg b-${SBADGE[s.status]}">${s.status}</span><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span><span class="tag t-grey">${esc(s.country)} — ${esc(s.telco)}</span><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">Operator: ${esc(s.opNaming)}</span></div></div><button class="ib sm" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button></div>
+ <div class="dhd"><div style="flex:1"><div class="ps">${esc(s.no||'No number yet')} · ${esc(s.cp)}</div><h3>${esc(s.service||'Untitled draft')}</h3><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="bdg b-${SBADGE[s.status]}">${s.status}</span><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span><span class="tag t-grey">${esc(s.country)} — ${esc(s.telco)}</span><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">Operator: ${esc(s.opNaming)}</span></div></div><button class="ib sm" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button></div>
  <div class="dbd">
   <div class="steps">${steps.map((x,i)=>`<div class="step ${x[1]?'done':i===curI?'cur':''}"><i></i>${x[0]}</div>`).join('')}</div>
   ${s.status==='Not Active'?`<div class="notice n-bad" style="margin-bottom:16px"><i class="ti ti-player-pause"></i><div><b>Not Active</b> — ${esc(s.reason)}</div></div>`:''}
@@ -1018,7 +1018,7 @@ function editService(id){
  ['endpoint','postback'].forEach(k=>{$('#l_'+k).innerHTML='';(s.lists[k].length?s.lists[k]:['']).forEach(v=>addLi(k,v));});$('#l_cred').innerHTML='';const cr=s.lists.cred||(s.tech.credential?[{label:'',type:'API Key',value:s.tech.credential}]:[]);(cr.length?cr:[{}]).forEach(c=>addCred(c));
  onAgg();onAirpay();sv('f_op',s.opNaming);
  const isDraft=s.status==='Draft';$('#saveLbl').textContent=isDraft?'Submit service':'Save changes';$('#draftBtn').hidden=!isDraft;
- $('#formLead').innerHTML=s.status==='Draft'?`<span class="tag t-brand">Draft</span> ${esc(s.no||'No number yet')} · <b>${esc(s.service)}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
+ $('#formLead').innerHTML=s.status==='Draft'?`<span class="tag t-brand">Draft</span> ${esc(s.no||'No number yet')} · <b>${esc(s.service||'Untitled draft')}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
  document.querySelectorAll('#panel-new details').forEach(d=>d.open=true);
  show('form');
 }
@@ -1027,7 +1027,7 @@ function cancelForm(){editingId=null;show('list');}
 function saveService(asDraft){
  if(!['Business User','PMO','Business Ops'].includes(role)){toast('Role '+role+' cannot save services');return;}
  const editing=editingId?get(editingId):null;
- const req=asDraft?[['f_service','Service Name']]:[['f_cp','Content Provider'],['f_country','Country'],['f_telco','Telco / Partner'],['f_service','Service Name'],['f_golive','Target Go Live'],['f_contract','Contract Number'],['f_desc','Service Description'],['p_bu_n','PIC Business User'],['p_bu_e','Email Business User'],['p_bu_p','Mobile Number Business User'],['p_pmo_n','PIC PMO'],['p_contact_n','Contact Person'],['f_cycle','Charging Cycle'],['f_payment','Payment Type']];
+ const req=asDraft?[]:[['f_cp','Content Provider'],['f_country','Country'],['f_telco','Telco / Partner'],['f_service','Service Name'],['f_golive','Target Go Live'],['f_contract','Contract Number'],['f_desc','Service Description'],['p_bu_n','PIC Business User'],['p_bu_e','Email Business User'],['p_bu_p','Mobile Number Business User'],['p_pmo_n','PIC PMO'],['p_contact_n','Contact Person'],['f_cycle','Charging Cycle'],['f_payment','Payment Type']];
  if(!asDraft&&gv('f_agg')==='Yes')req.push(['f_aggname','Aggregator Name']);
  if(!asDraft&&gv('f_airpay')==='Yes')req.push(['f_partner','Partner Name (Airpay)']);
  document.querySelectorAll('#panel-new .err').forEach(e=>e.classList.remove('err'));
