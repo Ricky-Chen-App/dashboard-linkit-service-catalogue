@@ -732,7 +732,7 @@ const biz=s=>s.airpay==='Yes'?'Airpay':'Service Internal';
 /* ================= navigation ================= */
 let page='list';
 const TITLES={list:'Service Catalogue',form:'Add Service',check:'Go-Live Checklist',post:'Post-Live & Reconciliation'};
-function show(p){page=p;document.querySelectorAll('.page').forEach(x=>x.hidden=x.id!=='p-'+p);document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('#pageTitle').textContent=p==='form'?(editingId?'Edit Service':formType==='airpay'?'Add Airpay Service':'Add Internal Service'):TITLES[p];$('#crumb').hidden=p==='list';render();window.scrollTo(0,0);}
+function show(p){page=p;document.querySelectorAll('.page').forEach(x=>x.hidden=x.id!=='p-'+p);document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));$('#pageTitle').textContent=p==='form'?(editingId&&get(editingId)&&get(editingId).status!=='Draft'?'Edit Service':formType==='airpay'?'Add Airpay Service':'Add Internal Service'):TITLES[p];$('#crumb').hidden=p==='list';render();window.scrollTo(0,0);}
 function render(){renderList();if(page==='check')renderCheck();if(page==='post')renderPost();if(page==='form')formHint();updateDot();}
 
 /* ================= role ================= */
@@ -1031,7 +1031,9 @@ function editService(id){
  ['endpoint','postback'].forEach(k=>{$('#l_'+k).innerHTML='';(s.lists[k].length?s.lists[k]:['']).forEach(v=>addLi(k,v));});$('#l_cred').innerHTML='';const cr=s.lists.cred||(s.tech.credential?[{label:'',type:'API Key',value:s.tech.credential}]:[]);(cr.length?cr:[{}]).forEach(c=>addCred(c));
  onAgg();onAirpay();sv('f_op',s.opNaming);
  const isDraft=s.status==='Draft';$('#saveLbl').textContent=isDraft?'Submit service':'Save changes';$('#draftBtn').hidden=!isDraft;
- $('#formLead').innerHTML=s.status==='Draft'?`<span class="tag t-brand">Draft</span> ${esc(s.no||'No number yet')} · <b>${esc(s.service||'Untitled draft')}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
+ const apTag=s.airpay==='Yes'?'<span class="tag t-teal">Airpay</span> ':'';
+ if(isDraft&&s.airpay==='Yes'){$('#modeSel').hidden=false;$('#f_airpay').disabled=true;}
+ $('#formLead').innerHTML=s.status==='Draft'?apTag+`<span class="tag t-brand">Draft</span> ${esc(s.no||'No number yet')} · <b>${esc(s.service||'Untitled draft')}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
  document.querySelectorAll('#panel-new details').forEach(d=>d.open=true);
  show('form');
 }
