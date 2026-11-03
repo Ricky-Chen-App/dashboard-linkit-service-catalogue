@@ -415,7 +415,7 @@ details.sec[open]>summary .chev{transform:rotate(180deg)}
       <summary><span class="st"><i class="ti ti-file-text"></i>Project Information <span class="own" style="background:var(--ok50);color:var(--ok)">Business User</span></span><i class="ti ti-chevron-down chev"></i></summary>
       <div class="secbody">
         <div class="grid g3">
-          <div class="f"><label>Service Catalogue Number</label><input id="f_no" readonly><span class="hint">Generated automatically by the system</span></div>
+          <div class="f"><label>Service Catalogue Number</label><input id="f_no" readonly placeholder="Generated when the service is submitted"><span class="hint">Generated automatically by the system once submitted — drafts have no number yet</span></div>
           <div class="f"><label>Submitted Date</label><input id="f_date" type="date" readonly></div>
           <div class="f"><label>Content Provider (CP) <span class="req">*</span></label><input id="f_cp" placeholder="PT. LinkIT"></div>
           <div class="f"><label>Country <span class="req">*</span></label><input id="f_country" placeholder="e.g. Indonesia" oninput="autoOp()" list="dl_country"></div>
@@ -688,7 +688,7 @@ let NID=1;
 const pic=n=>n?[n,n.toLowerCase().replace(/[^a-z ]/g,'').trim().replace(/\s+/g,'.')+'@linkit.id','+62 8'+(11+n.length)+'-'+(2000+n.length*37)+'-'+(4100+n.length*53)]:['','',''];
 function mk(o){
  const id=NID++;
- const s=Object.assign({id,no:`SC-${(o.date||'2026-01-01').slice(0,4)}-${String(id).padStart(4,'0')}`,date:'2026-01-05',cp:'PT. LinkIT',opNaming:'New',adn:'',contract:'',aggregator:'No',aggName:'',airpay:'No',partner:'',desc:'',type:'Portal',cycle:'Daily',payment:'Prepaid',period:'180 days',lang:'English',billable:'Billable',freemium:'No',downcharge:'No',retry:'No',campType:'Mainstream',graf:'No',subkw:'',price:'',currency:'IDR',prize:'',tax:[{party:'VAT',type:'Percentage',value:'11'}],rs:[{party:'Telco',type:'Percentage',value:'50'},{party:'LinkIT',type:'Percentage',value:'50'}],status:'Pending',reason:'',golive:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},tech:{},lists:{endpoint:[],postback:[]},esc:{},server:'',hist:[]},o);
+ const s=Object.assign({id,no:o.status==='Draft'?'':`SC-${(o.date||'2026-01-01').slice(0,4)}-${String(id).padStart(4,'0')}`,date:'2026-01-05',cp:'PT. LinkIT',opNaming:'New',adn:'',contract:'',aggregator:'No',aggName:'',airpay:'No',partner:'',desc:'',type:'Portal',cycle:'Daily',payment:'Prepaid',period:'180 days',lang:'English',billable:'Billable',freemium:'No',downcharge:'No',retry:'No',campType:'Mainstream',graf:'No',subkw:'',price:'',currency:'IDR',prize:'',tax:[{party:'VAT',type:'Percentage',value:'11'}],rs:[{party:'Telco',type:'Percentage',value:'50'},{party:'LinkIT',type:'Percentage',value:'50'}],status:'Pending',reason:'',golive:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},tech:{},lists:{endpoint:[],postback:[]},esc:{},server:'',hist:[]},o);
  s.types=s.types||(s.type?s.type.split(/,\s*/):[]);s.type=s.types.join(', ');s.prices=s.prices||(s.price?[{price:s.price,label:''}]:[]);
  const p=o.p||{};s.pics={};PICS.forEach(([k])=>s.pics[k]=pic(p[k]||''));delete s.p;
  if(o.fill)fill(s,'pre',o.fill);if(o.fillPost)fill(s,'post',o.fillPost);delete s.fill;delete s.fillPost;
@@ -760,7 +760,7 @@ function renderList(){
  const rows=base.filter(s=>listStatus==='All'||s.status===listStatus);
  $('#listBody').innerHTML=rows.length?rows.map(s=>{const x=st(s,'pre');const r=readiness(s);
   return`<tr class="click" onclick="openDetail(${s.id})">
-  <td><div class="pn">${esc(s.service)}</div><div class="ps">${esc(s.no)} · ${s.country||s.telco?esc(s.country)+' — '+esc(s.telco):'details not filled in yet'}</div></td>
+  <td><div class="pn">${esc(s.service)}</div><div class="ps">${esc(s.no||'No number yet')} · ${s.country||s.telco?esc(s.country)+' — '+esc(s.telco):'details not filled in yet'}</div></td>
   <td><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">${esc(s.opNaming)}</span></td>
   <td><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span></td>
   <td class="r mono">${money(s)}${s.prices&&s.prices.length>1?`<div class="ps">+${s.prices.length-1} more price point${s.prices.length>2?"s":""}</div>`:""}</td>
@@ -788,7 +788,7 @@ function openDetail(id){
  if(role==='Business Ops'&&s.status==='Not Active')acts.push(`<button class="btn" onclick="reactivate(${id})"><i class="ti ti-player-play"></i>Reactivate</button>`);
  if(['Business Ops','Finance'].includes(role)&&s.campaign&&s.recon!=='Matched')acts.push(`<button class="btn btn-ok" onclick="reconModal(${id})"><i class="ti ti-scale"></i>Confirm reconciliation</button>`);
  $('#drawer').innerHTML=`
- <div class="dhd"><div style="flex:1"><div class="ps">${esc(s.no)} · ${esc(s.cp)}</div><h3>${esc(s.service)}</h3><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="bdg b-${SBADGE[s.status]}">${s.status}</span><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span><span class="tag t-grey">${esc(s.country)} — ${esc(s.telco)}</span><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">Operator: ${esc(s.opNaming)}</span></div></div><button class="ib sm" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button></div>
+ <div class="dhd"><div style="flex:1"><div class="ps">${esc(s.no||'No number yet')} · ${esc(s.cp)}</div><h3>${esc(s.service)}</h3><div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px"><span class="bdg b-${SBADGE[s.status]}">${s.status}</span><span class="tag ${biz(s)==='Airpay'?'t-teal':'t-info'}">${biz(s)}</span><span class="tag t-grey">${esc(s.country)} — ${esc(s.telco)}</span><span class="tag ${s.opNaming==='New'?'t-brand':'t-grey'}">Operator: ${esc(s.opNaming)}</span></div></div><button class="ib sm" onclick="closeDrawer()" aria-label="Close"><i class="ti ti-x"></i></button></div>
  <div class="dbd">
   <div class="steps">${steps.map((x,i)=>`<div class="step ${x[1]?'done':i===curI?'cur':''}"><i></i>${x[0]}</div>`).join('')}</div>
   ${s.status==='Not Active'?`<div class="notice n-bad" style="margin-bottom:16px"><i class="ti ti-player-pause"></i><div><b>Not Active</b> — ${esc(s.reason)}</div></div>`:''}
@@ -976,12 +976,12 @@ function autoOp(){
  $('#opHint').className='hint '+(n?'info':'ok');
 }
 function setMode(m){formMode=m;document.querySelectorAll('.modec').forEach(b=>b.classList.toggle('on',b.dataset.m===m));$('#panel-new').hidden=m!=='new';$('#panel-airpay').hidden=m!=='airpay';if(m==='airpay'){fillApSelect();apPreview();}}
-function nextNo(){const id=Math.max(...services.map(s=>s.id))+1;return`SC-${today.slice(0,4)}-${String(id).padStart(4,'0')}`;}
+function numberFor(id){return`SC-${today.slice(0,4)}-${String(id).padStart(4,'0')}`;}
 function resetForm(){
  document.querySelectorAll('#panel-new input:not([type=file]):not([type=checkbox]),#panel-new textarea').forEach(e=>{e.value='';e.classList.remove('err');});setTypes([]);setPrices([]);$('#f_types').classList.remove('err','imp');
  document.querySelectorAll('#panel-new select').forEach(e=>e.selectedIndex=0);
  document.querySelectorAll('.files').forEach(e=>e.innerHTML='');document.querySelectorAll('#panel-new .imp').forEach(e=>e.classList.remove('imp'));
- sv('f_no',nextNo());sv('f_date',today);sv('f_cp','PT. LinkIT');
+ sv('f_no','');sv('f_date',today);sv('f_cp','PT. LinkIT');
  rsEd.set([{party:'Telco',type:'Percentage',value:''},{party:'LinkIT',type:'Percentage',value:''}]);
  taxEd.set([{party:'PPN',type:'Percentage',value:'11'}]);
  ['endpoint','postback'].forEach(k=>{$('#l_'+k).innerHTML='';addLi(k);});$('#l_cred').innerHTML='';addCred();
@@ -1016,7 +1016,7 @@ function editService(id){
  ['endpoint','postback'].forEach(k=>{$('#l_'+k).innerHTML='';(s.lists[k].length?s.lists[k]:['']).forEach(v=>addLi(k,v));});$('#l_cred').innerHTML='';const cr=s.lists.cred||(s.tech.credential?[{label:'',type:'API Key',value:s.tech.credential}]:[]);(cr.length?cr:[{}]).forEach(c=>addCred(c));
  onAgg();onAirpay();sv('f_op',s.opNaming);
  const isDraft=s.status==='Draft';$('#saveLbl').textContent=isDraft?'Submit service':'Save changes';$('#draftBtn').hidden=!isDraft;
- $('#formLead').innerHTML=s.status==='Draft'?`<span class="tag t-brand">Draft</span> ${esc(s.no)} · <b>${esc(s.service)}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
+ $('#formLead').innerHTML=s.status==='Draft'?`<span class="tag t-brand">Draft</span> ${esc(s.no||'No number yet')} · <b>${esc(s.service)}</b> — continue filling in the details, then submit. The status becomes <b>Pending</b> once submitted.`:`Step 2 — ${esc(s.no)} · <b>${esc(nameOf(s))}</b> · status ${s.status}. PMO completes and updates the service details during development.`;
  document.querySelectorAll('#panel-new details').forEach(d=>d.open=true);
  show('form');
 }
@@ -1033,24 +1033,25 @@ function saveService(asDraft){
  $('#f_types').classList.remove('err');
  if(!asDraft&&!getTypes().length){const c=$('#f_types');c.closest('details').open=true;c.classList.add('err');c.scrollIntoView({block:'center'});toast('Select at least one Type Service');return;}
  if(!asDraft&&!getPrices().some(p=>p.price)){const c=document.querySelector('#f_prices [data-p=price]');c.closest('details').open=true;c.classList.add('err');c.focus();c.scrollIntoView({block:'center'});toast('Enter at least one Service Price');return;}
- const o={no:gv('f_no'),date:gv('f_date'),cp:gv('f_cp'),country:gv('f_country'),telco:gv('f_telco'),opNaming:gv('f_op'),service:gv('f_service'),adn:gv('f_adn'),golive:gv('f_golive'),contract:gv('f_contract'),aggregator:gv('f_agg'),aggName:gv('f_aggname'),airpay:gv('f_airpay'),partner:gv('f_partner'),desc:gv('f_desc'),types:getTypes(),type:getTypes().join(', '),cycle:gv('f_cycle'),payment:gv('f_payment'),period:gv('f_period'),lang:gv('f_lang'),billable:gv('f_billable'),freemium:gv('f_freemium'),downcharge:gv('f_downcharge'),retry:gv('f_retry'),campType:gv('f_camptype'),graf:gv('f_graf'),subkw:gv('f_subkw'),prices:getPrices(),price:(getPrices().find(p=>p.price)||{}).price||'',currency:gv('f_cur'),prize:gv('f_prize'),server:gv('t_server'),
+ const o={no:'',date:gv('f_date'),cp:gv('f_cp'),country:gv('f_country'),telco:gv('f_telco'),opNaming:gv('f_op'),service:gv('f_service'),adn:gv('f_adn'),golive:gv('f_golive'),contract:gv('f_contract'),aggregator:gv('f_agg'),aggName:gv('f_aggname'),airpay:gv('f_airpay'),partner:gv('f_partner'),desc:gv('f_desc'),types:getTypes(),type:getTypes().join(', '),cycle:gv('f_cycle'),payment:gv('f_payment'),period:gv('f_period'),lang:gv('f_lang'),billable:gv('f_billable'),freemium:gv('f_freemium'),downcharge:gv('f_downcharge'),retry:gv('f_retry'),campType:gv('f_camptype'),graf:gv('f_graf'),subkw:gv('f_subkw'),prices:getPrices(),price:(getPrices().find(p=>p.price)||{}).price||'',currency:gv('f_cur'),prize:gv('f_prize'),server:gv('t_server'),
   rs:rsEd.rows.filter(r=>r.party||r.value).map(r=>({...r})),tax:taxEd.rows.filter(r=>r.party||r.value).map(r=>({...r})),pics:{},tech:{},esc:{},lists:{}};
  PICS.forEach(([k])=>o.pics[k]=[gv(`p_${k}_n`),gv(`p_${k}_e`),gv(`p_${k}_p`)]);
  document.querySelectorAll('#techWrap [data-k]').forEach(e=>o.tech[e.dataset.k]=e.value.trim());
  document.querySelectorAll('#escWrap [data-k]').forEach(e=>o.esc[e.dataset.k]=e.value.trim());
  ['endpoint','postback'].forEach(k=>o.lists[k]=[...document.querySelectorAll('#l_'+k+' input')].map(e=>e.value.trim()).filter(Boolean));o.lists.cred=[...document.querySelectorAll('#l_cred .cred')].map(r=>({label:r.querySelector('[data-c=label]').value.trim(),type:r.querySelector('[data-c=type]').value,value:r.querySelector('[data-c=value]').value.trim()})).filter(c=>c.label||c.value);
  if(editing){
-  Object.assign(editing,o);
+  o.no=editing.no;Object.assign(editing,o);
+  if(!asDraft&&!editing.no)editing.no=numberFor(editing.id);
   if(editing.status==='Draft'&&!asDraft){editing.status='Pending';log(editing,`Draft submitted by ${role} — status Pending`);toast('Service submitted — status Pending');}
   else if(asDraft){log(editing,`Draft updated by ${role}`);toast('Draft saved');}
   else{log(editing,`Service data updated by ${role}`);toast('Changes saved');}
   const id=editingId;editingId=null;show('list');openDetail(id);}
  else{const id=Math.max(...services.map(s=>s.id))+1;const st=asDraft?'Draft':'Pending';
-  const s=Object.assign({id,status:st,reason:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},hist:[[today,asDraft?`Draft saved by ${role}`:`Service created by ${role} — status Pending`]]},o);
+  o.no=asDraft?'':numberFor(id);const s=Object.assign({id,status:st,reason:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},hist:[[today,asDraft?`Draft saved by ${role}`:`Service created by ${role} — status Pending`]]},o);
   services.unshift(s);toast(asDraft?'Draft saved — you can continue it later from the Service Catalogue':'Service submitted — status Pending');listStatus='All';show('list');openDetail(id);}
 }
 /* Airpay existing */
-function fillApSelect(){const cur=gv('ap_svc');$('#ap_svc').innerHTML='<option value="">-- Select service --</option>'+services.map(s=>`<option value="${s.id}">${esc(s.no)} — ${esc(nameOf(s))}${s.airpay==='Yes'?' · Airpay':''}</option>`).join('');sv('ap_svc',cur);}
+function fillApSelect(){const cur=gv('ap_svc');$('#ap_svc').innerHTML='<option value="">-- Select service --</option>'+services.filter(s=>s.no).map(s=>`<option value="${s.id}">${esc(s.no)} — ${esc(nameOf(s))}${s.airpay==='Yes'?' · Airpay':''}</option>`).join('');sv('ap_svc',cur);}
 function apPreview(){
  const s=get(+gv('ap_svc'));
  if(!s){$('#ap_prev').innerHTML='<p class="hint">Select a service to see its reference data from the Service Catalogue.</p>';sv('ap_partner','');apRs.set([{party:'Telco',type:'Percentage',value:'50'},{party:'Airpay partner',type:'Percentage',value:'50'}]);apTax.set([{party:'PPN',type:'Percentage',value:'11'}]);return;}
