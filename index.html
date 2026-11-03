@@ -783,6 +783,7 @@ function openDetail(id){
  const lines=(arr)=>arr.length?arr.map(x=>`${esc(x.party)}: ${esc(x.value)}${x.type==='Percentage'?'%':' (fixed)'}`).join('<br>'):'—';
  const acts=[];
  if(s.status==='Draft'&&['Business User','PMO','Business Ops'].includes(role))acts.push(`<button class="btn btn-p" onclick="closeDrawer();editService(${id})"><i class="ti ti-file-pencil"></i>Continue draft</button>`);
+ if(s.status==='Draft'&&['Business User','PMO','Business Ops'].includes(role))acts.push(`<button class="btn btn-dng" onclick="deleteDraft(${id})"><i class="ti ti-trash"></i>Delete draft</button>`);
  if(s.status==='Pending'&&role==='PMO')acts.push(`<button class="btn btn-p" onclick="startDev(${id})"><i class="ti ti-player-play"></i>Start development</button>`);
  if(s.status!=='Draft'&&['Business User','PMO','Business Ops'].includes(role))acts.push(`<button class="btn" onclick="closeDrawer();editService(${id})"><i class="ti ti-edit"></i>Edit data</button>`);
  if(s.status!=='Pending'&&s.status!=='Draft')acts.push(`<button class="btn" onclick="closeDrawer();goChecklist(${id})"><i class="ti ti-checklist"></i>Go-Live Checklist</button>`);
@@ -827,6 +828,11 @@ function timelineHtml(s){
 function log(s,t){s.hist.push([today,t]);}
 function startDev(id){const s=get(id);s.status='In Development';log(s,'PMO started development — status In Development');toast(s.service+' → In Development');render();openDetail(id);}
 function goChecklist(id){clCur=id;clFilt={};show('check');}
+function deleteDraft(id){
+ const s=get(id);
+ openModal('Delete draft',`<p>Delete draft <b>${esc(s.service||'Untitled draft')}</b>? This cannot be undone.</p>`,
+  [{t:'Cancel'},{t:'Delete draft',cls:'btn-dng',fn:()=>{services.splice(services.findIndex(x=>x.id===id),1);closeDrawer();toast('Draft deleted');render();}}]);
+}
 function reactivate(id){const s=get(id);s.status='Active';s.reason='';log(s,'Service reactivated');toast('Service reactivated');render();openDetail(id);}
 
 function openModal(title,body,actions){
