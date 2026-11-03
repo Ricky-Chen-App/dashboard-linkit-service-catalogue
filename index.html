@@ -1017,7 +1017,11 @@ function newService(type){
  show('form');
 }
 function editService(id){
- const s=get(id);editingId=id;formType=s.airpay==='Yes'?'airpay':'internal';$('#modeSel').hidden=true;setMode('new');resetForm();$('#f_airpay').disabled=false;
+ const s=get(id);
+ if(s.apDraft){editingId=id;formType='airpay';resetForm();sv('f_airpay','Yes');$('#f_airpay').disabled=true;$('#modeSel').hidden=true;setMode('airpay');
+  sv('ap_svc',s.apBase||'');apPreview();sv('ap_partner',s.partner);apRs.set(s.rs);apTax.set(s.tax);
+  $('#formLead').innerHTML='<span class="tag t-teal">Airpay</span> <span class="tag t-brand">Draft</span> Continue the draft, then save the Airpay service.';show('form');return;}
+ editingId=id;formType=s.airpay==='Yes'?'airpay':'internal';$('#modeSel').hidden=true;setMode('new');resetForm();$('#f_airpay').disabled=false;
  const map={f_no:'no',f_date:'date',f_cp:'cp',f_country:'country',f_telco:'telco',f_service:'service',f_adn:'adn',f_golive:'golive',f_contract:'contract',f_agg:'aggregator',f_aggname:'aggName',f_airpay:'airpay',f_desc:'desc',f_type:'type',f_cycle:'cycle',f_payment:'payment',f_period:'period',f_lang:'lang',f_billable:'billable',f_freemium:'freemium',f_downcharge:'downcharge',f_retry:'retry',f_camptype:'campType',f_graf:'graf',f_subkw:'subkw',f_price:'price',f_cur:'currency',f_prize:'prize',f_partner:'partner',t_server:'server'};
  Object.entries(map).forEach(([f,k])=>sv(f,s[k]));
  PICS.forEach(([k])=>{sv(`p_${k}_n`,s.pics[k][0]);sv(`p_${k}_e`,s.pics[k][1]);sv(`p_${k}_p`,s.pics[k][2]);});
@@ -1074,17 +1078,22 @@ function apPreview(){
 function saveAirpayDraft(){
  if(!['Business User','PMO','Business Ops'].includes(role)){toast('Role '+role+' cannot save services');return;}
  const base=get(+gv('ap_svc'));
- const d=mk({date:today,status:'Draft',airpay:'Yes'});
+ const cur=editingId?get(editingId):null;const upd=!!(cur&&cur.apDraft);
+ const d=upd?cur:mk({date:today,status:'Draft',airpay:'Yes'});
+ const keep={id:upd?cur.id:Math.max(...services.map(x=>x.id))+1,date:upd?cur.date:today,hist:upd?cur.hist:[[today,`Draft saved by ${role}`]]};
  if(base)Object.assign(d,JSON.parse(JSON.stringify(base)));
- Object.assign(d,{id:Math.max(...services.map(x=>x.id))+1,no:'',status:'Draft',date:today,airpay:'Yes',partner:gv('ap_partner'),reason:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},
-  rs:apRs.rows.filter(r=>r.party||r.value).map(r=>({...r})),tax:apTax.rows.filter(r=>r.party||r.value).map(r=>({...r})),hist:[[today,`Draft saved by ${role}`]]});
- services.unshift(d);toast('Draft saved — you can continue it later from the Service Catalogue');listStatus='All';show('list');openDetail(d.id);
+ Object.assign(d,keep,{no:'',status:'Draft',airpay:'Yes',apDraft:true,apBase:base?base.id:null,partner:gv('ap_partner'),reason:'',goLiveDate:'',campaign:'',recon:'Pending',reconPeriod:'',sent:{},cl:{},
+  rs:apRs.rows.filter(r=>r.party||r.value).map(r=>({...r})),tax:apTax.rows.filter(r=>r.party||r.value).map(r=>({...r}))});
+ if(upd){log(d,`Draft updated by ${role}`);toast('Draft saved');}
+ else{services.unshift(d);toast('Draft saved — you can continue it later from the Service Catalogue');}
+ editingId=null;listStatus='All';show('list');openDetail(d.id);
 }
 function saveAirpay(){
  if(!['Business User','PMO','Business Ops'].includes(role)){toast('Role '+role+' cannot save services');return;}
  const s=get(+gv('ap_svc'));if(!s){toast('Select a service first');return;}
  if(!gv('ap_partner')){$('#ap_partner').classList.add('err');toast('Partner Name (Airpay) is required');return;}
  s.airpay='Yes';s.partner=gv('ap_partner');s.rs=apRs.rows.filter(r=>r.party||r.value).map(r=>({...r}));s.tax=apTax.rows.filter(r=>r.party||r.value).map(r=>({...r}));
+ const dr=editingId?get(editingId):null;if(dr&&dr.apDraft)services.splice(services.indexOf(dr),1);editingId=null;
  log(s,'Airpay configured — partner '+s.partner);toast('Airpay service saved');listBiz='Airpay';show('list');openDetail(s.id);
 }
 
